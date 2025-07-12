@@ -1,0 +1,26 @@
+from aiogram import Router, html
+from aiogram.filters import CommandStart
+from aiogram.types import Message
+
+from models import Role
+from storage import Storage
+
+start_command_router = Router(name=__name__)
+
+
+@start_command_router.message(CommandStart())
+async def start_command_handler(message: Message, storage: Storage):
+    user_id = message.from_user.id
+    existing_user = await storage.get_user(user_id)
+    if existing_user is None:
+        full_name = message.from_user.full_name
+        role = Role.ADMIN
+        all_users = await storage.list_users()
+        for user in all_users:
+            if user.role == Role.ADMIN:
+                role = Role.GUEST
+                break
+        created = await storage.upsert_user(user_id, full_name, role)
+        await message.answer(f"Приветствую, {html.bold(created.full_name)}!")
+    else:
+        await message.answer(f"Приветствую, {html.bold(message.from_user.full_name)}!")
