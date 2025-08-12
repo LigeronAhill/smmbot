@@ -22,7 +22,9 @@ async def migrate(pool: asyncpg.pool.Pool):
             """
         )
 
-        applied_migrations = await conn.fetch("SELECT filename FROM _migrations")
+        applied_migrations = await conn.fetch(
+            "SELECT filename FROM _migrations"
+        )
         applied = {m["filename"] for m in applied_migrations}
 
         migration_files = sorted(
@@ -56,6 +58,6 @@ async def migrate(pool: asyncpg.pool.Pool):
                 "user_role",
                 encoder=str,
                 decoder=lambda x: Role(x),
-                schema="pg_catalog",
+                schema="public",
                 format="text",
             )
