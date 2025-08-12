@@ -3,6 +3,7 @@ from aiogram.types import Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from keyboards.buttons import LIST_USERS
+from models.user import Role
 from storage.storage import Storage
 from callbacks import Action, UserAction
 
@@ -18,14 +19,22 @@ async def list_users_handler(message: Message, storage: Storage):
         for user in users:
             if user.id != author.id:
                 kb = InlineKeyboardBuilder()
-                for action in Action:
+                if user.role == Role.GUEST:
+                    action = Action.MAKE_EMPLOYEE
                     kb.button(
                         text=action.value,
                         callback_data=UserAction(
                             action=action, user_id=user.id
                         ),
                     )
-                kb.adjust(2)
+                elif user.role == Role.EMPLOYEE:
+                    action = Action.MAKE_GUEST
+                    kb.button(
+                        text=action.value,
+                        callback_data=UserAction(
+                            action=action, user_id=user.id
+                        ),
+                    )
                 await message.answer(
                     f"{html.italic(user.full_name)}:{html.bold(user.role)}",
                     reply_markup=kb.as_markup(),

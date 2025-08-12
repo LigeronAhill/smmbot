@@ -1,5 +1,6 @@
 from aiogram import Router, F, html, Bot
 from aiogram.types import CallbackQuery
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from callbacks import UserAction, Action
 from keyboards.guest_keyboard import guest_keyboard
 from models.user import Role
@@ -31,8 +32,15 @@ async def make_employee_handler(
                 updated = await storage.upsert_user(
                     user_id, existing.full_name, Role.EMPLOYEE
                 )
-                await query.message.answer(
-                    f"Роль пользователя {html.italic(updated.full_name)} изменена на {html.bold(updated.role)}"
+                action = Action.MAKE_GUEST
+                kb = InlineKeyboardBuilder()
+                kb.button(
+                    text=action.value,
+                    callback_data=UserAction(action=action, user_id=updated.id),
+                )
+                await query.message.edit_text(
+                    f"{html.italic(updated.full_name)}:{html.bold(updated.role)}",
+                    reply_markup=kb.as_markup(),
                 )
                 await bot.send_message(
                     updated.id,
@@ -61,8 +69,15 @@ async def make_guest_handler(
                 updated = await storage.upsert_user(
                     user_id, existing.full_name, Role.GUEST
                 )
-                await query.message.answer(
-                    f"Роль пользователя {html.italic(updated.full_name)} изменена на {html.bold(updated.role)}"
+                action = Action.MAKE_EMPLOYEE
+                kb = InlineKeyboardBuilder()
+                kb.button(
+                    text=action.value,
+                    callback_data=UserAction(action=action, user_id=updated.id),
+                )
+                await query.message.edit_text(
+                    f"{html.italic(updated.full_name)}:{html.bold(updated.role)}",
+                    reply_markup=kb.as_markup(),
                 )
                 await bot.send_message(
                     updated.id, "Доступ отозван", reply_markup=guest_keyboard()
